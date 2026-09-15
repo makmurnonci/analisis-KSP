@@ -802,8 +802,10 @@ function attachHandlers(){
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.saran-box').forEach(b => { b.classList.remove('show'); const ta=b.querySelector('textarea'); if(ta) ta.value=''; });
     document.querySelectorAll('.evidence-box').forEach(b => { b.classList.remove('show'); const et=b.querySelector('.evidence-text'); if(et) et.textContent=''; });
+    document.querySelectorAll('.subcheck').forEach(b => { b.classList.remove('show'); const l=b.querySelector('[id^="sclist-"]'); if(l) l.innerHTML=''; });
     document.querySelectorAll('.item-row').forEach(r => r.classList.remove('auto-ada','auto-tidak'));
     document.querySelectorAll('.auto-badge, .review-badge').forEach(b => b.classList.remove('show'));
+    renderTypoPanel([]);
     updateSummary();
     try{ await storageDelete(STORAGE_KEY); }catch(e){}
     document.getElementById('saveStatus').textContent = 'Tersimpan';
