@@ -234,6 +234,27 @@
     #printFormView table{break-inside:auto;}
     #printFormView tr{break-inside:avoid;}
   }
+
+  /* --- Rincian sub-komponen & temuan salah ketik --- */
+  .subcheck{display:none; margin-top:7px; border:1px dashed var(--border); border-radius:4px; padding:7px 9px; background:#FCFBF7;}
+  .subcheck.show{display:block;}
+  .subcheck > .sc-title{font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); font-weight:700; margin-bottom:5px;}
+  .sc-item{font-size:12.5px; display:flex; gap:6px; align-items:flex-start; padding:1px 0;}
+  .sc-item .mark{font-weight:700; width:14px; flex:0 0 14px; text-align:center;}
+  .sc-item.ok .mark{color:var(--ada);}
+  .sc-item.no .mark{color:var(--tidak);}
+  .sc-item.no{color:var(--tidak);}
+  .typo-card{background:var(--card); border:1px solid var(--border); border-left:4px solid var(--gold); border-radius:6px; padding:16px 18px; margin-bottom:22px; display:none;}
+  .typo-card.show{display:block;}
+  .typo-card h2{font-family:var(--serif); font-size:17px; margin:0 0 6px;}
+  .typo-card .hint{font-size:12.5px; color:var(--muted); margin:0 0 12px;}
+  .typo-list{display:flex; flex-direction:column; gap:9px; max-height:430px; overflow:auto;}
+  .typo-row{border:1px solid var(--border-soft); border-radius:5px; padding:8px 10px; background:#FCFBF7;}
+  .typo-row .word{font-weight:700; color:var(--tidak);}
+  .typo-row .arrow{color:var(--muted); margin:0 5px;}
+  .typo-row .fix{font-weight:700; color:var(--ada);}
+  .typo-row .ctx{display:block; margin-top:4px; font-size:12.5px; color:var(--ink); font-style:italic;}
+  .typo-row .loc{font-size:11px; color:var(--muted);}
 </style>
 </head>
 <body>
@@ -269,7 +290,7 @@
 
   <div class="import-card">
     <h2>Impor Dokumen KSP Sekolah</h2>
-    <p class="hint">Unggah dokumen KSP yang sudah disusun sekolah (.docx). Aplikasi akan memindai isinya dan otomatis menandai indikator yang komponennya terdeteksi ada di dalam dokumen. Indikator yang sifatnya kualitatif (mis. kualitas rumusan visi/misi) tetap perlu diperiksa manual.</p>
+    <p class="hint">Unggah dokumen KSP yang sudah disusun sekolah (.docx). Aplikasi akan memindai isinya dan otomatis menandai indikator yang komponennya terdeteksi ada di dalam dokumen, lengkap dengan kalimat buktinya. Untuk indikator kualitatif (mis. visi, misi, tujuan, pembiasaan, proses penyusunan) aplikasi hanya memastikan komponennya ADA; mutu rumusannya tetap dinilai pengawas. Hanya logo/gambar yang sama sekali tidak bisa dibaca otomatis.</p>
     <div class="import-row">
       <input type="file" id="fileInput" accept=".docx" style="font-size:13px;">
       <span class="import-filename" id="fileName">Belum ada file dipilih</span>
@@ -281,6 +302,12 @@
     <button type="button" class="analyze-btn" id="analyzeBtn" disabled>Analisis & Isi Otomatis</button>
     <div class="import-status" id="importStatus"></div>
     <div class="import-disclaimer">Catatan: deteksi berbasis kecocokan kata kunci pada teks dokumen (termasuk kata yang sepadan/berimbuhan, mis. "penilaian" akan cocok dengan "menilai"), bukan penilaian mutu isi. Selalu tinjau ulang setiap indikator bertanda garis putus-putus sebelum mencetak hasil akhir.</div>
+  </div>
+
+  <div class="typo-card" id="typoCard">
+    <h2>Dugaan Salah Ketik dalam Dokumen</h2>
+    <p class="hint">Kata berikut diduga salah ketik karena mirip sekali dengan kata lain yang jauh lebih sering dipakai di dokumen yang sama, atau termasuk kekeliruan umum. Perbaiki manual di file Word; ini dugaan, bukan koreksi otomatis.</p>
+    <div class="typo-list" id="typoList"></div>
   </div>
 
   <div class="summary-bar">
@@ -313,16 +340,16 @@
 <script>
 const DATA = [
   {title:"PROSES PENYUSUNAN", items:[
-    {no:"1.", text:"Sekolah menyusun KSP melalui proses:"},
-    {no:"a.", text:"Pembentukan Tim Penyusun KSP", indent:1},
-    {no:"b.", text:"Penyusunan Draf KSP", indent:1},
-    {no:"c.", text:"Workshop KSP", indent:1},
-    {no:"d.", text:"Finalisasi KSP", indent:1},
-    {no:"2.", text:"Penyusunan KSP melibatkan stakeholder (Kepala Sekolah, Guru, Pegawai Sekolah, Komite/Perwakilan wali murid, Dinas Pendidikan dan Kebudayaan/Pengawas)"},
+    {no:"1.", text:"Sekolah menyusun KSP melalui proses:", ak:["proses penyusunan","tahapan penyusunan","mekanisme penyusunan","prosedur penyusunan kurikulum"], qual:true},
+    {no:"a.", text:"Pembentukan Tim Penyusun KSP", indent:1, ak:["tim penyusun","tim pengembang kurikulum","tpk","sk tim","pembentukan tim"], qual:true},
+    {no:"b.", text:"Penyusunan Draf KSP", indent:1, ak:["draf ksp","draft ksp","penyusunan draf","draf kurikulum","rancangan kurikulum"], qual:true},
+    {no:"c.", text:"Workshop KSP", indent:1, ak:["workshop","lokakarya","in house training","iht","rapat penyusunan kurikulum"], qual:true},
+    {no:"d.", text:"Finalisasi KSP", indent:1, ak:["finalisasi","penyempurnaan dokumen","revisi akhir","pengesahan dokumen kurikulum"], qual:true},
+    {no:"2.", text:"Penyusunan KSP melibatkan stakeholder (Kepala Sekolah, Guru, Pegawai Sekolah, Komite/Perwakilan wali murid, Dinas Pendidikan dan Kebudayaan/Pengawas)", ak:["komite sekolah","pemangku kepentingan","wali murid","dinas pendidikan","pengawas sekolah","berita acara"], qual:true, subs:[{l:"Kepala sekolah",ak:["kepala sekolah"]},{l:"Guru/pendidik",ak:["guru","pendidik"]},{l:"Komite/wali murid",ak:["komite sekolah","wali murid","orang tua"]},{l:"Dinas/Pengawas",ak:["dinas pendidikan","pengawas sekolah","pengawas"]}]},
   ]},
   {title:"SAMPUL / HALAMAN JUDUL", items:[
-    {no:"1.", text:"Memuat Judul yang tepat"},
-    {no:"2.", text:"Terdapat Logo Sekolah dan atau Daerah"},
+    {no:"1.", text:"Memuat Judul yang tepat", ak:["kurikulum satuan pendidikan","kurikulum operasional satuan pendidikan","dokumen kurikulum"], qual:true},
+    {no:"2.", text:"Terdapat Logo Sekolah dan atau Daerah (gambar tidak terbaca otomatis)"},
     {no:"3.", text:"Memuat Tahun Ajaran", ak:["tahun ajaran","tahun pelajaran","tahun akademik","20\\d{2}\\s*/\\s*20\\d{2}"]},
     {no:"4.", text:"Terdapat Nama dan Alamat Sekolah", ak:["alamat sekolah","nama sekolah","nama satuan pendidikan","jalan","jl.","desa","kelurahan","kecamatan"]},
   ]},
@@ -334,7 +361,32 @@ const DATA = [
     {no:"", text:"Pengantar Penyusunan dan atau Pengembangan Kurikulum Satuan Pendidikan yang memuat ucapan terima kasih kepada pihak yang berkontribusi dalam penyelesaian dokumen KSP.", ak:["kata pengantar","prakata","puji syukur","ucapan terima kasih"]},
   ]},
   {title:"DAFTAR ISI", items:[
-    {no:"", text:"Memuat daftar isi seluruh komponen yang ada dalam dokumen dan kesesuaian halaman.", ak:["daftar isi","table of contents"]},
+    {no:"", text:"Memuat daftar isi seluruh komponen yang ada dalam dokumen dan kesesuaian halaman.", ak:["daftar isi","table of contents"], subs:[
+      {l:"Kata Pengantar",ak:["kata pengantar"]},
+      {l:"Daftar Isi",ak:["daftar isi"]},
+      {l:"BAB I Karakteristik Satuan Pendidikan",ak:["karakteristik uptd sd","bab i karakteristik","karakteristik satuan pendidikan"]},
+      {l:"A. Analisis Konteks Peserta Didik",ak:["konteks peserta didik","analisis konteks peserta didik"]},
+      {l:"B. Analisis Konteks Pendidik dan Tenaga Kependidikan",ak:["konteks pendidikan dan tenaga","tenaga kependidikan"]},
+      {l:"C. Analisis Konteks Sarana dan Prasarana",ak:["sarana dan prasarana","konteks sarana"]},
+      {l:"D. Analisis Konteks Sosial dan Budaya",ak:["sosial dan budaya","konteks sosial"]},
+      {l:"BAB II Visi, Misi, dan Tujuan",ak:["visi, misi, dan tujuan","bab ii visi"]},
+      {l:"A. Visi",ak:["visi uptd sd negeri 35 parepare","visi sekolah"]},
+      {l:"B. Misi",ak:["misi uptd sd negeri 35 parepare","misi sekolah"]},
+      {l:"C. Tujuan",ak:["tujuan uptd sd negeri 35 parepare","tujuan sekolah"]},
+      {l:"BAB III Pengorganisasian Pembelajaran",ak:["pengorganisasian pembelajaran","bab iii"]},
+      {l:"A. Intrakurikuler",ak:["intrakurikuler"]},
+      {l:"B. Ko-Kurikuler",ak:["kokurikuler","ko-kurikuler","ko kurikuler"]},
+      {l:"C. Ekstrakurikuler",ak:["ekstrakurikuler"]},
+      {l:"D. Program Penanaman Nilai Karakter",ak:["penanaman nilai karakter"]},
+      {l:"BAB IV Perencanaan Pembelajaran",ak:["perencanaan pembelajaran","bab iv"]},
+      {l:"A. Ruang Lingkup Satuan Pendidikan (CP)",ak:["ruang lingkup satuan pendidikan","capaian pembelajaran"]},
+      {l:"B. Ruang Lingkup Kelas (RPP)",ak:["ruang lingkup kelas","modul ajar","rencana pelaksanaan pembelajaran"]},
+      {l:"BAB V Evaluasi, Pengembangan Profesional, dan Pendampingan",ak:["pengembangan profesional","bab v evaluasi"]},
+      {l:"A. Evaluasi",ak:["evaluasi kurikulum","evaluasi implementasi"]},
+      {l:"B. Pengembangan Profesional",ak:["pengembangan profesional"]},
+      {l:"C. Pendampingan",ak:["pendampingan"]},
+      {l:"BAB VI Penutup",ak:["bab vi penutup","penutup"]},
+    ]},
   ]},
   {title:"I. ANALISIS KARAKTERISTIK SATUAN PENDIDIKAN", items:[
     {no:"A.", text:"Analisis karakteristik peserta didik", ak:["karakteristik peserta didik","karakteristik siswa","kondisi peserta didik","profil peserta didik","kondisi siswa"]},
@@ -346,71 +398,71 @@ const DATA = [
   ]},
   {title:"II. VISI, MISI DAN TUJUAN", subsections:[
     {sub:"A. VISI SEKOLAH", items:[
-      {no:"1.", text:"Merupakan gambaran masa depan yang ingin dicapai oleh satuan pendidikan."},
-      {no:"2.", text:"Memberikan panduan/arahan dan motivasi."},
-      {no:"3.", text:"Realistis, kredibel dan atraktif. Mudah dipahami, relatif singkat, ideal dan berfokus pada mutu, serta memotivasi setiap pemangku kepentingan."},
+      {no:"1.", text:"Merupakan gambaran masa depan yang ingin dicapai oleh satuan pendidikan.", ak:["visi sekolah","visi satuan pendidikan","rumusan visi","visi uptd","visi sd","berikut adalah visi","terwujudnya"], qual:true},
+      {no:"2.", text:"Memberikan panduan/arahan dan motivasi.", ak:["visi sekolah","visi satuan pendidikan","rumusan visi","visi uptd","visi sd","merujuk pada visi"], qual:true},
+      {no:"3.", text:"Realistis, kredibel dan atraktif. Mudah dipahami, relatif singkat, ideal dan berfokus pada mutu, serta memotivasi setiap pemangku kepentingan.", ak:["visi sekolah","visi satuan pendidikan","rumusan visi","visi uptd","visi sd"], qual:true},
     ]},
     {sub:"B. MISI SEKOLAH", items:[
-      {no:"1.", text:"Menunjukkan secara jelas mengenai apa yang hendak dicapai oleh satuan pendidikan."},
-      {no:"2.", text:"Dalam bentuk kalimat yang menunjukkan tindakan, bukan kalimat yang menunjukkan keadaan sebagaimana pada rumusan visi."},
-      {no:"3.", text:"Rumusan misi terdapat keterkaitan dengan indikator visi."},
-      {no:"4.", text:"Menggambarkan upaya bersama yang berorientasi kepada peserta didik."},
+      {no:"1.", text:"Menunjukkan secara jelas mengenai apa yang hendak dicapai oleh satuan pendidikan.", ak:["misi sekolah","misi satuan pendidikan","rumusan misi","misi uptd","misi sd","menjabarkan misi"], qual:true},
+      {no:"2.", text:"Dalam bentuk kalimat yang menunjukkan tindakan, bukan kalimat yang menunjukkan keadaan sebagaimana pada rumusan visi.", ak:["misi sekolah","rumusan misi","misi uptd","misi sd","melaksanakan pembinaan","mewujudkan lingkungan"], qual:true},
+      {no:"3.", text:"Rumusan misi terdapat keterkaitan dengan indikator visi.", ak:["mengimplementasikan visi","penjabaran visi","misi sekolah","rumusan misi","visi dan misi"], qual:true},
+      {no:"4.", text:"Menggambarkan upaya bersama yang berorientasi kepada peserta didik.", ak:["misi sekolah","rumusan misi","misi uptd","misi sd"], qual:true},
     ]},
     {sub:"C. TUJUAN SEKOLAH", items:[
-      {no:"1.", text:"Tujuan serasi dan mendeskripsikan misi dan nilai-nilai satuan pendidikan."},
-      {no:"2.", text:"Tujuan fokus pada hasil yang diinginkan pada peserta didik."},
-      {no:"3.", text:"Spesifik, terukur, dapat dicapai dalam jangka waktu tertentu."},
+      {no:"1.", text:"Tujuan serasi dan mendeskripsikan misi dan nilai-nilai satuan pendidikan.", ak:["tujuan sekolah","tujuan satuan pendidikan","tujuan uptd","tujuan sd","rumusan tujuan"], qual:true},
+      {no:"2.", text:"Tujuan fokus pada hasil yang diinginkan pada peserta didik.", ak:["tujuan sekolah","tujuan satuan pendidikan","tujuan uptd","tujuan sd"], qual:true},
+      {no:"3.", text:"Spesifik, terukur, dapat dicapai dalam jangka waktu tertentu.", ak:["tujuan jangka pendek","tujuan jangka menengah","tujuan jangka panjang","target pencapaian","indikator keberhasilan"], qual:true, subs:[{l:"Tujuan jangka pendek",ak:["tujuan jangka pendek"]},{l:"Tujuan jangka menengah",ak:["tujuan jangka menengah"]},{l:"Tujuan jangka panjang",ak:["tujuan jangka panjang"]}]},
     ]},
   ]},
   {title:"III. PENGORGANISASIAN PEMBELAJARAN", subsections:[
     {sub:"A. Intrakurikuler", items:[
-      {no:"1.", text:"Muatan mata pelajaran dan muatan tambahan lainnya termasuk mulok yang diajarkan setiap jenjang kelas.", ak:["struktur kurikulum","muatan mata pelajaran","muatan lokal","mulok","mata pelajaran","muatan tambahan"]},
+      {no:"1.", text:"Muatan mata pelajaran dan muatan tambahan lainnya termasuk mulok yang diajarkan setiap jenjang kelas.", ak:["struktur kurikulum","muatan mata pelajaran","muatan lokal","mulok","mata pelajaran","muatan tambahan"], subs:[{l:"Struktur/muatan mata pelajaran",ak:["struktur kurikulum","muatan mata pelajaran"]},{l:"Muatan lokal (mulok)",ak:["muatan lokal","mulok"]},{l:"Muatan tambahan lain",ak:["muatan tambahan","program tambahan","koding","kecerdasan artifisial"]},{l:"Rincian per jenjang kelas",ak:["fase a","fase b","fase c","kelas i","kelas 1","per jenjang"]}]},
       {no:"2.", text:"Alokasi waktu: jumlah jam pelajaran per minggu untuk setiap mata pelajaran.", ak:["alokasi waktu","jam pelajaran per minggu","jumlah jam pelajaran","beban belajar","jam tatap muka","jtm"]},
-      {no:"3.", text:"Metode dan Strategi Pembelajaran: a) penjelasan mengenai metode pengajaran yang digunakan (misalnya pembelajaran aktif, kolaboratif, berbasis proyek); b) penjelasan mengenai strategi pembelajaran untuk mengakomodasi berbagai gaya belajar siswa.", ak:["metode pembelajaran","strategi pembelajaran","metode mengajar","metode pengajaran","cara mengajar","model pembelajaran","strategi mengajar","pembelajaran aktif","pembelajaran kolaboratif","pembelajaran berbasis proyek","gaya belajar"]},
+      {no:"3.", text:"Metode dan Strategi Pembelajaran: a) penjelasan mengenai metode pengajaran yang digunakan (misalnya pembelajaran aktif, kolaboratif, berbasis proyek); b) penjelasan mengenai strategi pembelajaran untuk mengakomodasi berbagai gaya belajar siswa.", ak:["metode pembelajaran","strategi pembelajaran","metode mengajar","metode pengajaran","cara mengajar","model pembelajaran","strategi mengajar","pembelajaran aktif","pembelajaran kolaboratif","pembelajaran berbasis proyek","gaya belajar"], subs:[{l:"a) Metode pengajaran",ak:["metode pembelajaran","metode mengajar","pakem","pembelajaran berbasis proyek","pembelajaran kolaboratif"]},{l:"b) Strategi untuk beragam gaya belajar",ak:["gaya belajar","diferensiasi","pembelajaran berdiferensiasi","kebutuhan belajar murid"]}]},
       {no:"4.", text:"Pendekatan pembelajaran yaitu deep learning atau pembelajaran mendalam beserta penjelasannya", ak:["deep learning","pembelajaran mendalam","pembelajaran bermakna","mindful learning","meaningful learning","joyful learning"]},
       {no:"5.", text:"Sekolah efektif atau sekolah yang dicita-citakan", ak:["sekolah efektif","sekolah yang dicita-citakan","sekolah impian","sekolah idaman","sekolah unggul"]},
-      {no:"6.", text:"Pengembangan Materi Pembelajaran: a) proses pengembangan dan pemilihan materi pembelajaran yang sesuai dengan kurikulum; b) sumber belajar yang digunakan (buku teks, media digital, referensi lainnya).", ak:["materi pembelajaran","sumber belajar","bahan ajar","buku teks","referensi belajar","media pembelajaran","media digital"]},
-      {no:"7.", text:"Evaluasi dan Penilaian: a) sistem penilaian yang digunakan untuk mengukur pencapaian siswa (misalnya penilaian formatif dan sumatif); b) kriteria penilaian dan instrumen yang digunakan (tes, kuis, proyek, presentasi).", ak:["penilaian formatif","penilaian sumatif","evaluasi dan penilaian","penilaian hasil belajar","asesmen pembelajaran","ulangan","ujian","rapor"]},
-      {no:"8.", text:"Pengembangan Kompetensi Guru: a) program pelatihan dan pengembangan profesional bagi guru untuk mendukung implementasi kurikulum; b) pendampingan dan evaluasi kinerja guru dalam proses pembelajaran.", ak:["pengembangan kompetensi guru","pelatihan guru","profesional guru","peningkatan kompetensi guru","workshop guru","pkb","pengembangan keprofesian berkelanjutan","supervisi guru","pendampingan guru"]},
+      {no:"6.", text:"Pengembangan Materi Pembelajaran: a) proses pengembangan dan pemilihan materi pembelajaran yang sesuai dengan kurikulum; b) sumber belajar yang digunakan (buku teks, media digital, referensi lainnya).", ak:["materi pembelajaran","sumber belajar","bahan ajar","buku teks","referensi belajar","media pembelajaran","media digital"], subs:[{l:"a) Pengembangan/pemilihan materi",ak:["materi pembelajaran","pengembangan materi","pemilihan materi"]},{l:"b) Sumber belajar",ak:["sumber belajar","buku teks","media digital","bahan ajar"]}]},
+      {no:"7.", text:"Evaluasi dan Penilaian: a) sistem penilaian yang digunakan untuk mengukur pencapaian siswa (misalnya penilaian formatif dan sumatif); b) kriteria penilaian dan instrumen yang digunakan (tes, kuis, proyek, presentasi).", ak:["penilaian formatif","penilaian sumatif","evaluasi dan penilaian","penilaian hasil belajar","asesmen pembelajaran","ulangan","ujian","rapor"], subs:[{l:"a) Penilaian formatif",ak:["penilaian formatif","asesmen formatif"]},{l:"a) Penilaian sumatif",ak:["penilaian sumatif","asesmen sumatif"]},{l:"b) Kriteria penilaian",ak:["kriteria ketercapaian","kriteria penilaian","ktp"]},{l:"b) Instrumen penilaian",ak:["instrumen penilaian","tes tertulis","portofolio","unjuk kerja","rubrik"]}]},
+      {no:"8.", text:"Pengembangan Kompetensi Guru: a) program pelatihan dan pengembangan profesional bagi guru untuk mendukung implementasi kurikulum; b) pendampingan dan evaluasi kinerja guru dalam proses pembelajaran.", ak:["pengembangan kompetensi guru","kompetensi guru","pelatihan guru","pelatihan bagi guru","profesional guru","peningkatan kompetensi","workshop guru","pkb","pengembangan keprofesian berkelanjutan","supervisi guru","pendampingan guru","in-house training","kkg","hari belajar guru"], subs:[{l:"a) Program pelatihan guru",ak:["pelatihan guru","in-house training","kkg","workshop guru","pengembangan keprofesian berkelanjutan"]},{l:"b) Pendampingan & evaluasi kinerja",ak:["supervisi akademik","pendampingan guru","evaluasi kinerja","penilaian kinerja guru","coaching"]}]},
     ]},
     {sub:"B. Kokurikuler: Penguatan Kompetensi Lulusan", items:[
       {no:"", text:"Pada bagian ini dideskripsikan semua hal terkait projek.", ak:["kokurikuler","projek penguatan","proyek penguatan","p5","projek penguatan profil pelajar pancasila","proyek profil pelajar pancasila"]},
       {no:"1.", text:"Terdapat 8 profil lulusan dan penjelasannya.", ak:["profil lulusan","profil pelajar pancasila","dimensi profil lulusan","8 dimensi"]},
-      {no:"2.", text:"Memuat tema proyek, dimensi, elemen, sub elemen, dan pengaturan waktu untuk setiap jenjang kelas.", ak:["tema proyek","dimensi profil lulusan","topik proyek","tema p5"]},
-      {no:"3.", text:"Memuat asesmen dan pelaporan Kokurikuler", ak:["asesmen kokurikuler","pelaporan kokurikuler","rapor projek","laporan p5","penilaian kokurikuler"]},
+      {no:"2.", text:"Memuat tema proyek, dimensi, elemen, sub elemen, dan pengaturan waktu untuk setiap jenjang kelas.", ak:["tema proyek","dimensi profil lulusan","topik proyek","tema p5"], subs:[{l:"Tema proyek",ak:["tema proyek","tema kokurikuler","tema p5"]},{l:"Dimensi",ak:["dimensi profil lulusan","dimensi"]},{l:"Elemen",ak:["elemen"]},{l:"Sub elemen",ak:["sub elemen","subelemen"]},{l:"Pengaturan waktu per jenjang",ak:["alokasi waktu","pengaturan waktu","jadwal kokurikuler"]}]},
+      {no:"3.", text:"Memuat asesmen dan pelaporan Kokurikuler", ak:["asesmen kokurikuler","pelaporan kokurikuler","rapor projek","laporan p5","penilaian kokurikuler"], subs:[{l:"Asesmen kokurikuler",ak:["asesmen kokurikuler","penilaian kokurikuler","penilaian proyek","asesmen projek"]},{l:"Pelaporan kokurikuler",ak:["pelaporan","rapor projek","laporan kegiatan","laporan p5"]}]},
     ]},
     {sub:"C. Ekstrakurikuler (bakat dan minat)", items:[
-      {no:"1.", text:"Jenis kegiatan ekstrakurikuler", ak:["ekstrakurikuler","eskul","kegiatan minat bakat","kegiatan pengembangan diri"]},
-      {no:"2.", text:"Tujuan spesifik kegiatan ekstrakurikuler", ak:["tujuan ekstrakurikuler","sasaran ekstrakurikuler"]},
-      {no:"3.", text:"Metode pelaksanaan ekstrakurikuler", ak:["pelaksanaan ekstrakurikuler","penyelenggaraan ekstrakurikuler","jadwal ekstrakurikuler"]},
-      {no:"4.", text:"Asesmen dan evaluasi ekstrakurikuler", ak:["evaluasi ekstrakurikuler","asesmen ekstrakurikuler","penilaian ekstrakurikuler"]},
+      {no:"1.", text:"Jenis kegiatan ekstrakurikuler", ak:["ekstrakurikuler","eskul","kegiatan minat bakat","kegiatan pengembangan diri"], subs:[{l:"Ekstrakurikuler wajib (Pramuka)",ak:["pramuka","kepramukaan"]},{l:"Ekstrakurikuler pilihan",ak:["ekstrakurikuler pilihan","seni","olahraga","olimpiade","tahfiz","drumband"]}]},
+      {no:"2.", text:"Tujuan spesifik kegiatan ekstrakurikuler", ak:["tujuan ekstrakurikuler","tujuan ektrakurikuler","sasaran ekstrakurikuler","tujuan kegiatan ekstrakurikuler","tujuan dari pelaksanaan ekstrakurikuler"]},
+      {no:"3.", text:"Metode pelaksanaan ekstrakurikuler", ak:["pelaksanaan ekstrakurikuler","pelaksanaan ektrakurikuler","penyelenggaraan ekstrakurikuler","jadwal ekstrakurikuler","mekanisme ekstrakurikuler"]},
+      {no:"4.", text:"Asesmen dan evaluasi ekstrakurikuler", ak:["evaluasi ekstrakurikuler","evaluasi ektrakurikuler","asesmen ekstrakurikuler","penilaian ekstrakurikuler","pelaporan ekstrakurikuler"]},
     ]},
     {sub:"D. Pembiasaan Sekolah", items:[
-      {no:"1.", text:"Keteladanan"},
-      {no:"2.", text:"Terprogram"},
-      {no:"3.", text:"Rutin"},
-      {no:"4.", text:"Spontan"},
+      {no:"1.", text:"Keteladanan", ak:["keteladanan","teladan","contoh dari guru","panutan"], qual:true},
+      {no:"2.", text:"Terprogram", ak:["kegiatan terprogram","pembiasaan terprogram","program pembiasaan","kegiatan terjadwal"], qual:true},
+      {no:"3.", text:"Rutin", ak:["kegiatan rutin","pembiasaan rutin","rutinitas harian","upacara bendera","apel pagi","kebiasaan harian"], qual:true},
+      {no:"4.", text:"Spontan", ak:["pembiasaan spontan","kegiatan spontan","spontan"], qual:true},
     ]},
   ]},
   {title:"IV. PERENCANAAN PEMBELAJARAN", subsections:[
     {sub:"A. Rencana pembelajaran untuk ruang lingkup satuan pendidikan", items:[
-      {no:"", text:"Pada bagian ini dijelaskan sumber CP, karakteristik setiap mapel, elemen dan deskripsi CP dari setiap mapel, serta peran/hubungan antar elemen untuk menuju CP yang diharapkan di setiap mapel.", ak:["capaian pembelajaran","cp mapel","fase cp","elemen cp","kompetensi lulusan mata pelajaran"]},
+      {no:"", text:"Pada bagian ini dijelaskan sumber CP, karakteristik setiap mapel, elemen dan deskripsi CP dari setiap mapel, serta peran/hubungan antar elemen untuk menuju CP yang diharapkan di setiap mapel.", ak:["capaian pembelajaran","cp mapel","fase cp","elemen cp","kompetensi lulusan mata pelajaran"], subs:[{l:"Sumber CP",ak:["capaian pembelajaran","keputusan kepala bskap","cp ditetapkan"]},{l:"Karakteristik tiap mapel",ak:["karakteristik mata pelajaran","karakteristik mapel"]},{l:"Elemen & deskripsi CP",ak:["elemen","deskripsi capaian"]},{l:"Hubungan antar elemen",ak:["antar elemen","keterkaitan elemen","hubungan elemen"]}]},
     ]},
     {sub:"B. Rencana pembelajaran untuk ruang lingkup kelas (ATP dan modul ajar/RPP)", items:[
-      {no:"", text:"Pada bagian ini dijelaskan: bagaimana TP (Tujuan Pembelajaran) dirumuskan berdasarkan deskripsi CP dengan melihat hubungan antar elemen; bagaimana ATP (Alur Tujuan Pembelajaran) disusun; dan bagaimana Modul Ajar/RPP disusun.", ak:["alur tujuan pembelajaran","tujuan pembelajaran","modul ajar","rpp","rencana pelaksanaan pembelajaran","atp"]},
+      {no:"", text:"Pada bagian ini dijelaskan: bagaimana TP (Tujuan Pembelajaran) dirumuskan berdasarkan deskripsi CP dengan melihat hubungan antar elemen; bagaimana ATP (Alur Tujuan Pembelajaran) disusun; dan bagaimana Modul Ajar/RPP disusun.", ak:["alur tujuan pembelajaran","tujuan pembelajaran","modul ajar","rpp","rencana pelaksanaan pembelajaran","atp"], subs:[{l:"Perumusan TP",ak:["tujuan pembelajaran","merumuskan tujuan pembelajaran"]},{l:"Penyusunan ATP",ak:["alur tujuan pembelajaran","atp"]},{l:"Penyusunan Modul Ajar/RPP",ak:["modul ajar","rencana pelaksanaan pembelajaran","rpp"]}]},
     ]},
     {sub:"C. Rencana Asesmen", items:[
-      {no:"", text:"Pada bagian ini dijelaskan teknik dan pelaksanaan asesmen formatif dan sumatif, analisis hasil asesmen, dan pemberian umpan balik.", ak:["rencana asesmen","asesmen formatif","umpan balik","asesmen sumatif","rencana penilaian","feedback"]},
+      {no:"", text:"Pada bagian ini dijelaskan teknik dan pelaksanaan asesmen formatif dan sumatif, analisis hasil asesmen, dan pemberian umpan balik.", ak:["rencana asesmen","asesmen formatif","umpan balik","asesmen sumatif","rencana penilaian","feedback"], subs:[{l:"Teknik asesmen",ak:["teknik asesmen","teknik penilaian","bentuk asesmen"]},{l:"Asesmen formatif",ak:["asesmen formatif","penilaian formatif"]},{l:"Asesmen sumatif",ak:["asesmen sumatif","penilaian sumatif"]},{l:"Analisis hasil asesmen",ak:["analisis hasil","pengolahan hasil","hasil asesmen"]},{l:"Umpan balik",ak:["umpan balik","feedback","refleksi"]}]},
     ]},
   ]},
   {title:"V. PENDAMPINGAN, EVALUASI DAN PENGEMBANGAN PROFESIONAL", subsections:[
     {sub:"A. Pendampingan implementasi kurikulum", items:[
-      {no:"", text:"Menguraikan peran, strategi dan waktu pelaksanaan dalam pendampingan", ak:["pendampingan implementasi kurikulum","pendampingan guru","coaching guru","pembinaan guru","supervisi akademik"]},
+      {no:"", text:"Menguraikan peran, strategi dan waktu pelaksanaan dalam pendampingan", ak:["pendampingan implementasi kurikulum","pendampingan guru","coaching guru","pembinaan guru","supervisi akademik"], subs:[{l:"Peran/pihak pendamping",ak:["kepala sekolah","pengawas","guru senior","peran"]},{l:"Strategi pendampingan",ak:["strategi pendampingan","coaching","mentoring","supervisi akademik","kkg"]},{l:"Waktu pelaksanaan",ak:["setiap semester","bulanan","triwulan","jadwal pendampingan","secara reguler"]}]},
     ]},
     {sub:"B. Evaluasi implementasi kurikulum", items:[
-      {no:"", text:"Menjelaskan waktu evaluasi KSP", ak:["evaluasi ksp","waktu evaluasi","jadwal evaluasi","periode evaluasi","waktu monitoring"]},
-      {no:"", text:"Menjelaskan strategi cara melakukan evaluasi KSP.", ak:["strategi evaluasi","cara evaluasi","teknik evaluasi","metode evaluasi","cara memonitor"]},
-      {no:"", text:"Menjelaskan siapa saja yang terlibat dalam evaluasi KSP", ak:["pihak yang terlibat","tim evaluasi","tim monev","pihak terkait","stakeholder evaluasi"]},
+      {no:"", text:"Menjelaskan waktu evaluasi KSP", ak:["evaluasi ksp","evaluasi kurikulum","waktu evaluasi","jadwal evaluasi","periode evaluasi","waktu monitoring","monitoring dan evaluasi","monev"]},
+      {no:"", text:"Menjelaskan strategi cara melakukan evaluasi KSP.", ak:["strategi evaluasi","cara evaluasi","teknik evaluasi","metode evaluasi","cara memonitor","mekanisme evaluasi","evaluasi dilakukan"]},
+      {no:"", text:"Menjelaskan siapa saja yang terlibat dalam evaluasi KSP", ak:["pihak yang terlibat","pihak yang dilibatkan","tim evaluasi","tim monev","pihak terkait","stakeholder evaluasi"]},
     ]},
     {sub:"C. Program pengembangan Profesional", items:[
       {no:"", text:"Program peningkatan profesional guru direncanakan oleh pimpinan satuan pendidikan berdasarkan rencana pengembangan satuan pendidikan dan masukan pemangku kepentingan.", ak:["pengembangan profesional","peningkatan profesional guru","program pkb","rencana pengembangan guru","peningkatan kompetensi profesional"]},
@@ -427,7 +479,7 @@ const DATA = [
     {no:"4.", text:"Modul Ajar/RPP", ak:["modul ajar","rencana pelaksanaan pembelajaran","rpp"]},
     {no:"5.", text:"Modul Pelaksanaan Kokurikuler", ak:["modul kokurikuler","pelaksanaan kokurikuler","modul p5","panduan kokurikuler"]},
     {no:"6.", text:"Jadwal Pelajaran", ak:["jadwal pelajaran","jadwal mengajar"]},
-    {no:"7.", text:"Dokumen foto dan daftar hadir workshop penyusunan KSP", ak:["daftar hadir workshop","dokumentasi workshop","notula workshop","absensi workshop","dokumentasi penyusunan ksp"]},
+    {no:"7.", text:"Dokumen foto dan daftar hadir workshop penyusunan KSP", ak:["daftar hadir workshop","dokumentasi workshop","notula workshop","absensi workshop","dokumentasi penyusunan ksp","berita acara","daftar hadir","dokumentasi kegiatan"]},
   ]},
 ];
 
@@ -437,7 +489,7 @@ const STORAGE_KEY = 'ksp-validasi-2025-2026-a1b7f3';
 // Kunci lama yang dipakai sebelum file ini dipisahkan; hanya dibaca
 // sekali untuk memindahkan data lama yang mungkin sudah tersimpan.
 const LEGACY_STORAGE_KEY = 'ksp-validasi-2025-2026';
-const PRESET_STATE = {"fields": {"f_nama_sekolah": "SD Negeri 71 Parepare", "f_kepsek": "Dra. Suarni, MM.Pd.", "f_alamat": "Desa Batu Raja, Kecamatan Hulu Palik", "f_wilayah": "Kabupaten Bengkulu Utara, Bengkulu"}, "items": {"it8": {"status": "ada", "auto": true}, "it9": {"status": "ada", "auto": true}, "it10": {"status": "tidak", "auto": true}, "it11": {"status": "tidak", "auto": true}, "it12": {"status": "tidak", "auto": true}, "it13": {"status": "tidak", "auto": true}, "it14": {"status": "ada", "auto": true}, "it15": {"status": "ada", "auto": true}, "it16": {"status": "tidak", "auto": true}, "it17": {"status": "ada", "auto": true}, "it18": {"status": "tidak", "auto": true}, "it19": {"status": "tidak", "auto": true}, "it30": {"status": "ada", "auto": true}, "it31": {"status": "ada", "auto": true}, "it32": {"status": "ada", "auto": true}, "it33": {"status": "tidak", "auto": true}, "it34": {"status": "tidak", "auto": true}, "it35": {"status": "ada", "auto": true}, "it36": {"status": "tidak", "auto": true}, "it37": {"status": "tidak", "auto": true}, "it38": {"status": "ada", "auto": true}, "it39": {"status": "ada", "auto": true}, "it40": {"status": "tidak", "auto": true}, "it41": {"status": "tidak", "auto": true}, "it42": {"status": "ada", "auto": true}, "it43": {"status": "tidak", "auto": true}, "it44": {"status": "tidak", "auto": true}, "it45": {"status": "tidak", "auto": true}, "it50": {"status": "ada", "auto": true}, "it51": {"status": "ada", "auto": true}, "it52": {"status": "ada", "auto": true}, "it53": {"status": "tidak", "auto": true}, "it54": {"status": "tidak", "auto": true}, "it55": {"status": "tidak", "auto": true}, "it56": {"status": "tidak", "auto": true}, "it57": {"status": "ada", "auto": true}, "it58": {"status": "tidak", "auto": true}, "it59": {"status": "tidak", "auto": true}, "it60": {"status": "ada", "auto": true}, "it61": {"status": "ada", "auto": true}, "it62": {"status": "ada", "auto": true}, "it63": {"status": "ada", "auto": true}, "it64": {"status": "tidak", "auto": true}, "it65": {"status": "tidak", "auto": true}, "it66": {"status": "tidak", "auto": true}}};
+const PRESET_STATE = undefined; // dinonaktifkan: sebelumnya berisi data sekolah lain
 let state = { fields:{}, items:{} };
 let itemCounter = 0;
 let saveTimer = null;
@@ -478,9 +530,17 @@ function uid(){ return 'it' + (itemCounter++); }
 function buildItemRow(item, id){
   const indentClass = item.indent ? ' indent-1' : '';
   const noHtml = item.no ? `<div class="item-no">${item.no}</div>` : `<div class="item-no">&bull;</div>`;
-  const badgeHtml = item.ak
-    ? `<span class="auto-badge" id="autobadge-${id}">Deteksi otomatis</span>`
-    : `<span class="review-badge" id="reviewbadge-${id}">Perlu diperiksa manual</span>`;
+  let badgeHtml = '';
+  if(item.ak){
+    badgeHtml = `<span class="auto-badge" id="autobadge-${id}">Deteksi otomatis</span>`;
+    // Indikator kualitatif: komponennya bisa dideteksi, tapi MUTU rumusannya
+    // tetap harus dinilai pengawas.
+    if(item.qual){
+      badgeHtml += `<span class="review-badge" id="reviewbadge-${id}">Mutu rumusan dinilai manual</span>`;
+    }
+  } else {
+    badgeHtml = `<span class="review-badge" id="reviewbadge-${id}">Perlu diperiksa manual</span>`;
+  }
   return `
   <div class="item-row${indentClass}" data-id="${id}">
     ${noHtml}
@@ -491,6 +551,10 @@ function buildItemRow(item, id){
         <button type="button" class="toggle-btn" data-val="tidak" data-id="${id}">Tidak</button>
       </div>
       ${badgeHtml}
+      <div class="subcheck" id="subcheck-${id}">
+        <div class="sc-title">Rincian Sub-Komponen</div>
+        <div id="sclist-${id}"></div>
+      </div>
       <div class="evidence-box" id="evidencebox-${id}">
         <label>Kalimat Terdeteksi Dalam Dokumen</label>
         <div class="evidence-text" id="evidence-${id}"></div>
@@ -584,6 +648,18 @@ function applyStateToDOM(){
       const ta = document.getElementById(`saran-${id}`);
       if(ta) ta.value = rec.saran;
     }
+    const scBox = document.getElementById(`subcheck-${id}`);
+    if(scBox){
+      if(Array.isArray(rec.subs) && rec.subs.length){
+        const listEl = document.getElementById(`sclist-${id}`);
+        if(listEl){
+          listEl.innerHTML = rec.subs.map(sc => `<div class="sc-item ${sc.ok ? 'ok' : 'no'}"><span class="mark">${sc.ok ? '\u2713' : '\u2715'}</span><span>${escHtml(sc.l)}${sc.ok ? '' : ' \u2014 belum terdeteksi'}</span></div>`).join('');
+        }
+        scBox.classList.add('show');
+      } else {
+        scBox.classList.remove('show');
+      }
+    }
     const evBox = document.getElementById(`evidencebox-${id}`);
     if(evBox){
       if(rec.status === 'ada' && rec.evidence){
@@ -599,6 +675,7 @@ function applyStateToDOM(){
     if(badge){
       if(rec.auto && rec.status){
         row.classList.add(rec.status === 'ada' ? 'auto-ada' : 'auto-tidak');
+        badge.textContent = rec.weak ? 'Deteksi otomatis (mirip, perlu dicek)' : 'Deteksi otomatis';
         badge.classList.add('show');
       } else {
         badge.classList.remove('show');
@@ -611,7 +688,7 @@ function applyStateToDOM(){
 function updateReviewBadges(){
   Object.keys(ITEM_MAP).forEach(id => {
     const item = ITEM_MAP[id];
-    if(item.ak) return;
+    if(item.ak && !item.qual) return;
     const badge = document.getElementById(`reviewbadge-${id}`);
     if(badge) badge.classList.toggle('show', hasImported);
   });
@@ -667,6 +744,7 @@ async function loadState(){
   }
   applyStateToDOM();
   updateReviewBadges();
+  if(Array.isArray(state.typos)) renderTypoPanel(state.typos);
 }
 
 function attachHandlers(){
@@ -860,20 +938,43 @@ function stemSentenceWords(normalizedSentence){
 // sepadan/berimbuhan: setiap kata penting pada frasa kata kunci punya
 // setidaknya satu kandidat akar kata yang juga muncul di kalimat itu,
 // walau bentuk katanya berbeda (mis. "penilaian" cocok dengan "menilai").
-function phraseMatchesSentence(keywordRaw, normalizedSentence, sentenceStemSet){
+function wordSimilar(kw, sw){
+  if(kw === sw) return true;
+  // "didik" cocok dengan "didiknya"/"didikan" (imbuhan akhir), tapi TIDAK
+  // dengan "pendidikan" - awalan yang berbeda biasanya berarti makna berbeda.
+  if(sw.startsWith(kw) && sw.length - kw.length <= 4) return true;
+  if(kw.startsWith(sw) && kw.length - sw.length <= 2) return true;
+  return false;
+}
+
+// Mengembalikan 'persis' bila frasa kata kunci muncul apa adanya pada kalimat,
+// 'mirip' bila semua kata pentingnya muncul BERURUTAN dan BERDEKATAN (maksimal
+// 2 kata sisipan), dan null bila tidak cocok. Syarat berdekatan inilah yang
+// mencegah kutipan bukti "nyasar" ke kalimat yang kebetulan memuat kata-kata
+// yang sama tapi topiknya lain.
+function phraseMatchesSentence(keywordRaw, normalizedSentence, sentenceWords){
   const keyword = keywordRaw.toLowerCase();
   let re = null;
   try{ re = new RegExp(keyword, 'i'); }catch(e){ re = null; }
   if(re ? re.test(normalizedSentence) : normalizedSentence.includes(keyword)){
-    return true;
+    return 'persis';
   }
   const words = keyword.split(/\s+/).filter(w => w.length >= 3 && !STOPWORDS_ID.has(w) && !/[\\^$.|?*+()[\]{}]/.test(w));
-  if(!words.length) return false;
-  return words.every(w => {
-    const candidates = stemCandidates(w);
-    if(!candidates.length) return sentenceStemSet.has(w);
-    return candidates.some(c => sentenceStemSet.has(c));
-  });
+  if(!words.length) return null;
+  // Kata kunci pendek (mis. "pkb", "iht") terlalu mudah salah cocok kalau
+  // dilonggarkan, jadi hanya diterima bila muncul persis.
+  if(words.some(w => w.length < 5)) return null;
+  let prev = -1;
+  for(const w of words){
+    let found = -1;
+    for(let i = prev + 1; i < sentenceWords.length; i++){
+      if(wordSimilar(w, sentenceWords[i])){ found = i; break; }
+    }
+    if(found < 0) return null;
+    if(prev >= 0 && found - prev > 3) return null;
+    prev = found;
+  }
+  return 'mirip';
 }
 
 function normalize(text){
@@ -891,6 +992,146 @@ function splitSentences(text){
     .filter(Boolean);
 }
 
+
+// ============================================================
+//  DETEKSI DUGAAN SALAH KETIK
+//  Dua cara: (1) daftar kekeliruan yang umum di dokumen sekolah;
+//  (2) kata langka yang hanya berbeda SATU huruf dari kata lain yang
+//      jauh lebih sering dipakai di dokumen yang sama
+//      (mis. "sbagai" vs "sebagai", "teerhadap" vs "terhadap").
+// ============================================================
+const TYPO_UMUM = {
+  'sbagai':'sebagai','pembejaran':'pembelajaran','pembelajran':'pembelajaran','kurikilum':'kurikulum','kurilulum':'kurikulum','sekolh':'sekolah','penilain':'penilaian','kegitan':'kegiatan','dengah':'dengan','teerhadap':'terhadap','analsis':'analisis','pendidiksn':'pendidikan',
+  'ektrakurikuler':'ekstrakurikuler','ekstrakulikuler':'ekstrakurikuler','ekstrakurikurer':'ekstrakurikuler',
+  'kulifikasi':'kualifikasi','prilaku':'perilaku','perubuatan':'perbuatan','religious':'religius',
+  'aktifitas':'aktivitas','kreatifitas':'kreativitas','sportifitas':'sportivitas','efektifitas':'efektivitas',
+  'praktek':'praktik','resiko':'risiko','jadual':'jadwal','sistim':'sistem','managemen':'manajemen',
+  'standart':'standar','ijin':'izin','nasehat':'nasihat','propinsi':'provinsi','hakekat':'hakikat',
+  'frekwensi':'frekuensi','katagori':'kategori','methode':'metode','tehnik':'teknik','effektif':'efektif',
+  'silahkan':'silakan','merubah':'mengubah','disyahkan':'disahkan','nopember':'november','pebruari':'februari',
+  'komplek':'kompleks','antri':'antre','karna':'karena','dibawah':'di bawah','diatas':'di atas',
+  'didalam':'di dalam','diluar':'di luar','disekolah':'di sekolah','kekurangannya':'kekurangan'
+};
+// Kata yang memang sah walau terlihat "langka"; jangan diusulkan diganti.
+const TYPO_ABAIKAN = new Set(['parepare','uptd','pancasila','kemendikbudristek','bskap','kokurikuler','intrakurikuler','ekstrakurikuler','asesmen','sumatif','formatif','literasi','numerasi','pakem','deep','learning','profil','dimensi','fase','modul','koding','artifisial']);
+
+function editDistance1(a, b){
+  // true bila a dan b berbeda paling banyak satu operasi (ganti/sisip/hapus)
+  if(a === b) return false;
+  const la = a.length, lb = b.length;
+  if(Math.abs(la - lb) > 1) return false;
+  let i = 0, j = 0, diff = 0;
+  while(i < la && j < lb){
+    if(a[i] === b[j]){ i++; j++; continue; }
+    diff++;
+    if(diff > 1) return false;
+    if(la === lb){ i++; j++; }
+    else if(la > lb){ i++; }
+    else { j++; }
+  }
+  if(i < la || j < lb) diff++;
+  return diff <= 1;
+}
+
+// Mengambil gugus konsonan pada sebuah kata, mis. "pendidkan" -> ["nd","dk"].
+function consonantClusters(w){
+  const out = [];
+  (w.match(/[bcdfghjklmnpqrstvwxyz]{2,}/g) || []).forEach(c => out.push(c));
+  return out;
+}
+
+// Kata yang "tidak lazim bentuknya": ada huruf vokal kembar (mis. "teerhadap")
+// atau gugus konsonan yang tidak pernah muncul pada kata-kata yang sering
+// dipakai di dokumen yang sama. Ambang ini dihitung dari dokumen itu sendiri,
+// jadi tidak perlu kamus besar yang harus diunduh.
+function looksMisspelled(w, clusterOk){
+  if(/([aiueo])\1/.test(w)) return true;
+  const cl = consonantClusters(w);
+  for(const c of cl){
+    if(c.length >= 3 && !clusterOk.has(c)) return true;
+    if(c.length === 2 && !clusterOk.has(c)) return true;
+  }
+  return false;
+}
+
+function detectTypos(rawText, sentences, normalizedSentences){
+  const freq = new Map();
+  const firstAt = new Map();
+  normalizedSentences.forEach((sent, idx) => {
+    const words = sent.match(/[a-z']{3,}/g) || [];
+    words.forEach(w => {
+      freq.set(w, (freq.get(w) || 0) + 1);
+      if(!firstAt.has(w)) firstAt.set(w, idx);
+    });
+  });
+  // Indeks berdasarkan panjang kata supaya perbandingan tidak terlalu berat.
+  const byLen = new Map();
+  freq.forEach((c, w) => {
+    if(!byLen.has(w.length)) byLen.set(w.length, []);
+    byLen.get(w.length).push(w);
+  });
+  // Kalibrasi: kumpulkan gugus konsonan yang WAJAR, yaitu yang muncul pada
+  // kata-kata yang sering dipakai di dokumen ini.
+  const clusterOk = new Set();
+  freq.forEach((c, w) => {
+    if(c >= 4) consonantClusters(w).forEach(cl => {
+      clusterOk.add(cl);
+      for(let i = 0; i + 2 <= cl.length; i++) clusterOk.add(cl.slice(i, i + 2));
+    });
+  });
+  const found = [];
+  const seen = new Set();
+  freq.forEach((count, w) => {
+    if(seen.has(w)) return;
+    if(TYPO_UMUM[w]){
+      seen.add(w);
+      found.push({ word:w, fix:TYPO_UMUM[w], count, idx:firstAt.get(w), kind:'umum' });
+      return;
+    }
+    if(w.length < 5 || count > 2 || TYPO_ABAIKAN.has(w)) return;
+    // Hanya kata yang bentuknya tidak lazim yang ditelusuri lebih lanjut,
+    // supaya kata yang sah tapi jarang dipakai (mis. "kamis", "fajar")
+    // tidak ikut dilaporkan sebagai salah ketik.
+    if(!looksMisspelled(w, clusterOk)) return;
+    let best = null;
+    [w.length - 1, w.length, w.length + 1].forEach(L => {
+      (byLen.get(L) || []).forEach(other => {
+        if(other === w) return;
+        const oc = freq.get(other);
+        if(oc < 5 || oc < count * 4) return;
+        if(best && oc <= best.count) return;
+        if(editDistance1(w, other)) best = { word:other, count:oc };
+      });
+    });
+    if(best){
+      seen.add(w);
+      found.push({ word:w, fix:best.word, count, idx:firstAt.get(w), kind:'mirip' });
+    }
+  });
+  found.sort((a, b) => (a.idx || 0) - (b.idx || 0));
+  return found.slice(0, 60).map(t => Object.assign({}, t, {
+    context: (sentences[t.idx] || '').slice(0, 220)
+  }));
+}
+
+function renderTypoPanel(list){
+  const card = document.getElementById('typoCard');
+  const box = document.getElementById('typoList');
+  if(!card || !box) return;
+  if(!list.length){
+    card.classList.remove('show');
+    box.innerHTML = '';
+    return;
+  }
+  box.innerHTML = list.map(t => `
+    <div class="typo-row">
+      <span class="word">${escHtml(t.word)}</span><span class="arrow">&rarr;</span><span class="fix">${escHtml(t.fix)}</span>
+      <span class="loc">(${t.kind === 'umum' ? 'kekeliruan umum' : 'beda satu huruf dari kata yang lazim dipakai'}, muncul ${t.count}&times;)</span>
+      <span class="ctx">&ldquo;${escHtml(t.context)}&rdquo;</span>
+    </div>`).join('');
+  card.classList.add('show');
+}
+
 function analyzeImportedText(rawText){
   const text = normalize(rawText);
   if(!text.trim()){
@@ -898,7 +1139,7 @@ function analyzeImportedText(rawText){
   }
   const sentences = splitSentences(rawText);
   const normalizedSentences = sentences.map(normalize);
-  const sentenceStemsList = normalizedSentences.map(stemSentenceWords);
+  const sentenceWordsList = normalizedSentences.map(s => s.match(/[a-z0-9]+/g) || []);
 
   let matched = 0, notMatched = 0, reviewCount = 0;
   Object.keys(ITEM_MAP).forEach(id => {
@@ -907,34 +1148,71 @@ function analyzeImportedText(rawText){
       reviewCount++;
       return;
     }
-    let matchedSentence = null;
-    const isMatch = item.ak.some(k => {
+    // Kumpulkan SEMUA kalimat yang cocok, lalu pilih yang paling meyakinkan
+    // sebagai kutipan bukti: kecocokan persis diutamakan, kata kunci yang
+    // lebih panjang/spesifik diutamakan, kalimat yang terlalu panjang
+    // (biasanya paragraf sambungan) diberi nilai lebih rendah.
+    let best = null;
+    item.ak.forEach(k => {
       for(let i = 0; i < normalizedSentences.length; i++){
-        if(phraseMatchesSentence(k, normalizedSentences[i], sentenceStemsList[i])){
-          matchedSentence = sentences[i];
-          return true;
+        const kind = phraseMatchesSentence(k, normalizedSentences[i], sentenceWordsList[i]);
+        if(!kind) continue;
+        let score = (kind === 'persis' ? 1000 : 300) + k.length * 2;
+        const len = sentences[i].length;
+        if(len < 25) score -= 30;
+        if(len > 260) score -= 40;
+        // Kalimat yang berupa JUDUL bagian (pendek, tanpa titik di akhir)
+        // jauh lebih baik sebagai bukti daripada kalimat di tengah paragraf.
+        if(len <= 90 && !/[.;,]$/.test(sentences[i].trim())) score += 120;
+        if(!best || score > best.score){
+          best = { score, kind, sentence: sentences[i], keyword: k };
         }
       }
-      return false;
     });
     if(!state.items[id]) state.items[id] = {};
-    state.items[id].status = isMatch ? 'ada' : 'tidak';
+    state.items[id].status = best ? 'ada' : 'tidak';
     state.items[id].auto = true;
-    if(isMatch){
+    // Periksa tiap sub-komponen indikator (mis. a/b, atau daftar unsur
+    // yang disebut pada rumusan indikator) satu per satu.
+    if(item.subs && item.subs.length){
+      const subResult = item.subs.map(sc => {
+        let ok = false;
+        for(const k of sc.ak){
+          for(let i = 0; i < normalizedSentences.length && !ok; i++){
+            if(phraseMatchesSentence(k, normalizedSentences[i], sentenceWordsList[i])) ok = true;
+          }
+          if(ok) break;
+        }
+        return { l: sc.l, ok };
+      });
+      state.items[id].subs = subResult;
+      const kurang = subResult.filter(x => !x.ok).map(x => x.l);
+      if(kurang.length && !state.items[id].saran){
+        state.items[id].saran = 'Sub-komponen belum terdeteksi: ' + kurang.join('; ') + '.';
+        const ta = document.getElementById(`saran-${id}`);
+        if(ta) ta.value = state.items[id].saran;
+      }
+    } else {
+      delete state.items[id].subs;
+    }
+    if(best){
       matched++;
-      // Simpan kalimat awal (pertama ditemukan) sebagai kutipan bukti,
-      // dipotong maksimal ~400 karakter agar tidak terlalu panjang di layar.
-      state.items[id].evidence = matchedSentence ? matchedSentence.slice(0, 400) : '';
+      state.items[id].evidence = best.sentence.slice(0, 400);
+      state.items[id].weak = (best.kind !== 'persis');
     } else {
       notMatched++;
       delete state.items[id].evidence;
+      delete state.items[id].weak;
     }
+    if(item.qual) reviewCount++;
   });
+  state.typos = detectTypos(rawText, sentences, normalizedSentences);
+  renderTypoPanel(state.typos);
   hasImported = true;
   applyStateToDOM();
   updateReviewBadges();
   scheduleSave();
-  return { matched, notMatched, reviewCount };
+  return { matched, notMatched, reviewCount, typoCount: state.typos.length };
 }
 
 function attachImportHandlers(){
@@ -986,9 +1264,9 @@ function attachImportHandlers(){
     if(!importedText.trim()) return;
     importStatus.textContent = 'Menganalisis dokumen…';
     setTimeout(() => {
-      const { matched, notMatched, reviewCount } = analyzeImportedText(importedText);
+      const { matched, notMatched, reviewCount, typoCount } = analyzeImportedText(importedText);
       importStatus.classList.add('result');
-      importStatus.textContent = `Selesai: ${matched} indikator terdeteksi "Ada", ${notMatched} tidak ditemukan otomatis, dan ${reviewCount} indikator lain perlu diperiksa manual (bertanda garis putus-putus abu-abu). Silakan tinjau ulang sebelum mencetak.`;
+      importStatus.textContent = `Selesai: ${matched} indikator terdeteksi "Ada", ${notMatched} tidak ditemukan otomatis, ${reviewCount} indikator perlu penilaian manual, dan ${typoCount} dugaan salah ketik ditemukan.`;
     }, 150);
   });
 }
@@ -1015,6 +1293,13 @@ function renderPrintForm(){
         saran = 'Tidak terdeteksi otomatis pada dokumen - mohon verifikasi';
       } else if(status === 'ada' && rec.evidence){
         saran = `Kutipan: "${rec.evidence}"`;
+      }
+      if(Array.isArray(rec.subs) && rec.subs.length){
+        const kurang = rec.subs.filter(x => !x.ok).map(x => x.l);
+        const rinci = kurang.length
+          ? `Sub-komponen belum terdeteksi: ${kurang.join('; ')}.`
+          : `Seluruh sub-komponen terdeteksi (${rec.subs.length} unsur).`;
+        saran = saran ? `${saran} ${rinci}` : rinci;
       }
       const indentClass = item.indent ? ' pf-indent' : '';
       rowsHtml += `<tr>
@@ -1048,6 +1333,12 @@ function renderPrintForm(){
       </thead>
       <tbody>${rowsHtml}</tbody>
     </table>
+    ${(Array.isArray(state.typos) && state.typos.length) ? `
+    <h3 style="font-family:var(--serif);font-size:14px;margin:22px 0 8px;">Lampiran: Dugaan Salah Ketik dalam Dokumen</h3>
+    <table>
+      <thead><tr><th style="width:36px;">NO.</th><th>KATA DALAM DOKUMEN</th><th>USULAN PERBAIKAN</th><th>KALIMAT</th></tr></thead>
+      <tbody>${state.typos.map((t, i) => `<tr><td class="pf-no">${i + 1}</td><td class="pf-txt">${escHtml(t.word)}</td><td class="pf-txt">${escHtml(t.fix)}</td><td class="pf-saran">${escHtml(t.context)}</td></tr>`).join('')}</tbody>
+    </table>` : ''}
     <div class="pf-footer">
       <p><strong>Rekomendasi:</strong></p>
       ${(f.f_rekomendasi || '').split('\n').filter(l=>l.trim()).map(l=>`<p>${escHtml(l)}</p>`).join('') || '<div class="pf-dots"></div><div class="pf-dots"></div><div class="pf-dots"></div>'}
