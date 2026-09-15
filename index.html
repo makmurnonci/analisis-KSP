@@ -280,7 +280,7 @@
     </div>
     <button type="button" class="analyze-btn" id="analyzeBtn" disabled>Analisis & Isi Otomatis</button>
     <div class="import-status" id="importStatus"></div>
-    <div class="import-disclaimer">Catatan: deteksi berbasis kecocokan kata kunci pada teks dokumen, bukan penilaian mutu isi. Selalu tinjau ulang setiap indikator bertanda garis putus-putus sebelum mencetak hasil akhir.</div>
+    <div class="import-disclaimer">Catatan: deteksi berbasis kecocokan kata kunci pada teks dokumen (termasuk kata yang sepadan/berimbuhan, mis. "penilaian" akan cocok dengan "menilai"), bukan penilaian mutu isi. Selalu tinjau ulang setiap indikator bertanda garis putus-putus sebelum mencetak hasil akhir.</div>
   </div>
 
   <div class="summary-bar">
@@ -323,26 +323,26 @@ const DATA = [
   {title:"SAMPUL / HALAMAN JUDUL", items:[
     {no:"1.", text:"Memuat Judul yang tepat"},
     {no:"2.", text:"Terdapat Logo Sekolah dan atau Daerah"},
-    {no:"3.", text:"Memuat Tahun Ajaran", ak:["tahun ajaran","tahun pelajaran","20\\d{2}\\s*/\\s*20\\d{2}"]},
-    {no:"4.", text:"Terdapat Nama dan Alamat Sekolah", ak:["alamat sekolah","jalan","jl."]},
+    {no:"3.", text:"Memuat Tahun Ajaran", ak:["tahun ajaran","tahun pelajaran","tahun akademik","20\\d{2}\\s*/\\s*20\\d{2}"]},
+    {no:"4.", text:"Terdapat Nama dan Alamat Sekolah", ak:["alamat sekolah","nama sekolah","nama satuan pendidikan","jalan","jl.","desa","kelurahan","kecamatan"]},
   ]},
   {title:"LEMBAR PENETAPAN DAN VALIDASI", items:[
-    {no:"1.", text:"Terdapat Rumusan/Lembar Penetapan Kurikulum ditandatangani Kepala Sekolah dan disertai stempel", ak:["lembar penetapan","penetapan kurikulum","lembar pengesahan"]},
-    {no:"2.", text:"Terdapat Rumusan/Lembar Validasi Kurikulum ditandatangani Pengawas Sekolah", ak:["lembar validasi","validasi kurikulum"]},
+    {no:"1.", text:"Terdapat Rumusan/Lembar Penetapan Kurikulum ditandatangani Kepala Sekolah dan disertai stempel", ak:["lembar penetapan","penetapan kurikulum","lembar pengesahan","ditetapkan","pengesahan kurikulum","surat keputusan","sk kepala sekolah"]},
+    {no:"2.", text:"Terdapat Rumusan/Lembar Validasi Kurikulum ditandatangani Pengawas Sekolah", ak:["lembar validasi","validasi kurikulum","divalidasi","surat validasi","pengawas sekolah menyatakan","telah divalidasi"]},
   ]},
   {title:"KATA PENGANTAR", items:[
-    {no:"", text:"Pengantar Penyusunan dan atau Pengembangan Kurikulum Satuan Pendidikan yang memuat ucapan terima kasih kepada pihak yang berkontribusi dalam penyelesaian dokumen KSP.", ak:["kata pengantar","puji syukur"]},
+    {no:"", text:"Pengantar Penyusunan dan atau Pengembangan Kurikulum Satuan Pendidikan yang memuat ucapan terima kasih kepada pihak yang berkontribusi dalam penyelesaian dokumen KSP.", ak:["kata pengantar","prakata","puji syukur","ucapan terima kasih"]},
   ]},
   {title:"DAFTAR ISI", items:[
-    {no:"", text:"Memuat daftar isi seluruh komponen yang ada dalam dokumen dan kesesuaian halaman.", ak:["daftar isi"]},
+    {no:"", text:"Memuat daftar isi seluruh komponen yang ada dalam dokumen dan kesesuaian halaman.", ak:["daftar isi","table of contents"]},
   ]},
   {title:"I. ANALISIS KARAKTERISTIK SATUAN PENDIDIKAN", items:[
-    {no:"A.", text:"Analisis karakteristik peserta didik", ak:["karakteristik peserta didik"]},
-    {no:"B.", text:"Analisis Guru dan Tenaga Kependidikan", ak:["guru dan tenaga kependidikan","tenaga kependidikan"]},
-    {no:"C.", text:"Analisis lingkungan satuan pendidikan", ak:["lingkungan satuan pendidikan","analisis lingkungan"]},
-    {no:"D.", text:"Analisis potensi dan kekhasan daerah setempat yang penting untuk diketahui, diberdayakan atau dilestarikan", ak:["kekhasan daerah","potensi daerah"]},
-    {no:"E.", text:"Analisis keterlibatan orang tua untuk mendukung perkembangan peserta didik", ak:["keterlibatan orang tua","peran orang tua"]},
-    {no:"F.", text:"Analisis prestasi/keterlibatan peserta didik dalam bidang akademik dan non akademik", ak:["prestasi peserta didik","prestasi akademik","prestasi non akademik"]},
+    {no:"A.", text:"Analisis karakteristik peserta didik", ak:["karakteristik peserta didik","karakteristik siswa","kondisi peserta didik","profil peserta didik","kondisi siswa"]},
+    {no:"B.", text:"Analisis Guru dan Tenaga Kependidikan", ak:["guru dan tenaga kependidikan","tenaga kependidikan","tenaga pendidik","kondisi guru","jumlah guru","kualifikasi guru","kualifikasi pendidik"]},
+    {no:"C.", text:"Analisis lingkungan satuan pendidikan", ak:["lingkungan satuan pendidikan","analisis lingkungan","lingkungan sekolah","kondisi lingkungan sekolah","kondisi geografis"]},
+    {no:"D.", text:"Analisis potensi dan kekhasan daerah setempat yang penting untuk diketahui, diberdayakan atau dilestarikan", ak:["kekhasan daerah","potensi daerah","keunikan daerah","karakteristik daerah","budaya lokal","potensi lokal"]},
+    {no:"E.", text:"Analisis keterlibatan orang tua untuk mendukung perkembangan peserta didik", ak:["keterlibatan orang tua","peran orang tua","partisipasi orang tua","dukungan orang tua","kerja sama orang tua","komite sekolah","paguyuban orang tua"]},
+    {no:"F.", text:"Analisis prestasi/keterlibatan peserta didik dalam bidang akademik dan non akademik", ak:["prestasi peserta didik","prestasi akademik","prestasi non akademik","prestasi siswa","capaian peserta didik","kejuaraan","lomba"]},
   ]},
   {title:"II. VISI, MISI DAN TUJUAN", subsections:[
     {sub:"A. VISI SEKOLAH", items:[
@@ -364,26 +364,26 @@ const DATA = [
   ]},
   {title:"III. PENGORGANISASIAN PEMBELAJARAN", subsections:[
     {sub:"A. Intrakurikuler", items:[
-      {no:"1.", text:"Muatan mata pelajaran dan muatan tambahan lainnya termasuk mulok yang diajarkan setiap jenjang kelas.", ak:["struktur kurikulum","muatan mata pelajaran","muatan lokal","mulok"]},
-      {no:"2.", text:"Alokasi waktu: jumlah jam pelajaran per minggu untuk setiap mata pelajaran.", ak:["alokasi waktu","jam pelajaran per minggu"]},
-      {no:"3.", text:"Metode dan Strategi Pembelajaran: a) penjelasan mengenai metode pengajaran yang digunakan (misalnya pembelajaran aktif, kolaboratif, berbasis proyek); b) penjelasan mengenai strategi pembelajaran untuk mengakomodasi berbagai gaya belajar siswa.", ak:["metode pembelajaran","strategi pembelajaran"]},
-      {no:"4.", text:"Pendekatan pembelajaran yaitu deep learning atau pembelajaran mendalam beserta penjelasannya", ak:["deep learning","pembelajaran mendalam"]},
-      {no:"5.", text:"Sekolah efektif atau sekolah yang dicita-citakan", ak:["sekolah efektif","sekolah yang dicita-citakan"]},
-      {no:"6.", text:"Pengembangan Materi Pembelajaran: a) proses pengembangan dan pemilihan materi pembelajaran yang sesuai dengan kurikulum; b) sumber belajar yang digunakan (buku teks, media digital, referensi lainnya).", ak:["materi pembelajaran","sumber belajar"]},
-      {no:"7.", text:"Evaluasi dan Penilaian: a) sistem penilaian yang digunakan untuk mengukur pencapaian siswa (misalnya penilaian formatif dan sumatif); b) kriteria penilaian dan instrumen yang digunakan (tes, kuis, proyek, presentasi).", ak:["penilaian formatif","penilaian sumatif","evaluasi dan penilaian"]},
-      {no:"8.", text:"Pengembangan Kompetensi Guru: a) program pelatihan dan pengembangan profesional bagi guru untuk mendukung implementasi kurikulum; b) pendampingan dan evaluasi kinerja guru dalam proses pembelajaran.", ak:["pengembangan kompetensi guru","pelatihan guru","profesional guru"]},
+      {no:"1.", text:"Muatan mata pelajaran dan muatan tambahan lainnya termasuk mulok yang diajarkan setiap jenjang kelas.", ak:["struktur kurikulum","muatan mata pelajaran","muatan lokal","mulok","mata pelajaran","muatan tambahan"]},
+      {no:"2.", text:"Alokasi waktu: jumlah jam pelajaran per minggu untuk setiap mata pelajaran.", ak:["alokasi waktu","jam pelajaran per minggu","jumlah jam pelajaran","beban belajar","jam tatap muka","jtm"]},
+      {no:"3.", text:"Metode dan Strategi Pembelajaran: a) penjelasan mengenai metode pengajaran yang digunakan (misalnya pembelajaran aktif, kolaboratif, berbasis proyek); b) penjelasan mengenai strategi pembelajaran untuk mengakomodasi berbagai gaya belajar siswa.", ak:["metode pembelajaran","strategi pembelajaran","metode mengajar","metode pengajaran","cara mengajar","model pembelajaran","strategi mengajar","pembelajaran aktif","pembelajaran kolaboratif","pembelajaran berbasis proyek","gaya belajar"]},
+      {no:"4.", text:"Pendekatan pembelajaran yaitu deep learning atau pembelajaran mendalam beserta penjelasannya", ak:["deep learning","pembelajaran mendalam","pembelajaran bermakna","mindful learning","meaningful learning","joyful learning"]},
+      {no:"5.", text:"Sekolah efektif atau sekolah yang dicita-citakan", ak:["sekolah efektif","sekolah yang dicita-citakan","sekolah impian","sekolah idaman","sekolah unggul"]},
+      {no:"6.", text:"Pengembangan Materi Pembelajaran: a) proses pengembangan dan pemilihan materi pembelajaran yang sesuai dengan kurikulum; b) sumber belajar yang digunakan (buku teks, media digital, referensi lainnya).", ak:["materi pembelajaran","sumber belajar","bahan ajar","buku teks","referensi belajar","media pembelajaran","media digital"]},
+      {no:"7.", text:"Evaluasi dan Penilaian: a) sistem penilaian yang digunakan untuk mengukur pencapaian siswa (misalnya penilaian formatif dan sumatif); b) kriteria penilaian dan instrumen yang digunakan (tes, kuis, proyek, presentasi).", ak:["penilaian formatif","penilaian sumatif","evaluasi dan penilaian","penilaian hasil belajar","asesmen pembelajaran","ulangan","ujian","rapor"]},
+      {no:"8.", text:"Pengembangan Kompetensi Guru: a) program pelatihan dan pengembangan profesional bagi guru untuk mendukung implementasi kurikulum; b) pendampingan dan evaluasi kinerja guru dalam proses pembelajaran.", ak:["pengembangan kompetensi guru","pelatihan guru","profesional guru","peningkatan kompetensi guru","workshop guru","pkb","pengembangan keprofesian berkelanjutan","supervisi guru","pendampingan guru"]},
     ]},
     {sub:"B. Kokurikuler: Penguatan Kompetensi Lulusan", items:[
-      {no:"", text:"Pada bagian ini dideskripsikan semua hal terkait projek.", ak:["kokurikuler","projek penguatan"]},
-      {no:"1.", text:"Terdapat 8 profil lulusan dan penjelasannya.", ak:["profil lulusan"]},
-      {no:"2.", text:"Memuat tema proyek, dimensi, elemen, sub elemen, dan pengaturan waktu untuk setiap jenjang kelas.", ak:["tema proyek","dimensi profil lulusan"]},
-      {no:"3.", text:"Memuat asesmen dan pelaporan Kokurikuler", ak:["asesmen kokurikuler","pelaporan kokurikuler"]},
+      {no:"", text:"Pada bagian ini dideskripsikan semua hal terkait projek.", ak:["kokurikuler","projek penguatan","proyek penguatan","p5","projek penguatan profil pelajar pancasila","proyek profil pelajar pancasila"]},
+      {no:"1.", text:"Terdapat 8 profil lulusan dan penjelasannya.", ak:["profil lulusan","profil pelajar pancasila","dimensi profil lulusan","8 dimensi"]},
+      {no:"2.", text:"Memuat tema proyek, dimensi, elemen, sub elemen, dan pengaturan waktu untuk setiap jenjang kelas.", ak:["tema proyek","dimensi profil lulusan","topik proyek","tema p5"]},
+      {no:"3.", text:"Memuat asesmen dan pelaporan Kokurikuler", ak:["asesmen kokurikuler","pelaporan kokurikuler","rapor projek","laporan p5","penilaian kokurikuler"]},
     ]},
     {sub:"C. Ekstrakurikuler (bakat dan minat)", items:[
-      {no:"1.", text:"Jenis kegiatan ekstrakurikuler", ak:["ekstrakurikuler"]},
-      {no:"2.", text:"Tujuan spesifik kegiatan ekstrakurikuler", ak:["tujuan ekstrakurikuler"]},
-      {no:"3.", text:"Metode pelaksanaan ekstrakurikuler", ak:["pelaksanaan ekstrakurikuler"]},
-      {no:"4.", text:"Asesmen dan evaluasi ekstrakurikuler", ak:["evaluasi ekstrakurikuler","asesmen ekstrakurikuler"]},
+      {no:"1.", text:"Jenis kegiatan ekstrakurikuler", ak:["ekstrakurikuler","eskul","kegiatan minat bakat","kegiatan pengembangan diri"]},
+      {no:"2.", text:"Tujuan spesifik kegiatan ekstrakurikuler", ak:["tujuan ekstrakurikuler","sasaran ekstrakurikuler"]},
+      {no:"3.", text:"Metode pelaksanaan ekstrakurikuler", ak:["pelaksanaan ekstrakurikuler","penyelenggaraan ekstrakurikuler","jadwal ekstrakurikuler"]},
+      {no:"4.", text:"Asesmen dan evaluasi ekstrakurikuler", ak:["evaluasi ekstrakurikuler","asesmen ekstrakurikuler","penilaian ekstrakurikuler"]},
     ]},
     {sub:"D. Pembiasaan Sekolah", items:[
       {no:"1.", text:"Keteladanan"},
@@ -394,40 +394,40 @@ const DATA = [
   ]},
   {title:"IV. PERENCANAAN PEMBELAJARAN", subsections:[
     {sub:"A. Rencana pembelajaran untuk ruang lingkup satuan pendidikan", items:[
-      {no:"", text:"Pada bagian ini dijelaskan sumber CP, karakteristik setiap mapel, elemen dan deskripsi CP dari setiap mapel, serta peran/hubungan antar elemen untuk menuju CP yang diharapkan di setiap mapel.", ak:["capaian pembelajaran","cp mapel"]},
+      {no:"", text:"Pada bagian ini dijelaskan sumber CP, karakteristik setiap mapel, elemen dan deskripsi CP dari setiap mapel, serta peran/hubungan antar elemen untuk menuju CP yang diharapkan di setiap mapel.", ak:["capaian pembelajaran","cp mapel","fase cp","elemen cp","kompetensi lulusan mata pelajaran"]},
     ]},
     {sub:"B. Rencana pembelajaran untuk ruang lingkup kelas (ATP dan modul ajar/RPP)", items:[
-      {no:"", text:"Pada bagian ini dijelaskan: bagaimana TP (Tujuan Pembelajaran) dirumuskan berdasarkan deskripsi CP dengan melihat hubungan antar elemen; bagaimana ATP (Alur Tujuan Pembelajaran) disusun; dan bagaimana Modul Ajar/RPP disusun.", ak:["alur tujuan pembelajaran","tujuan pembelajaran","modul ajar","rpp"]},
+      {no:"", text:"Pada bagian ini dijelaskan: bagaimana TP (Tujuan Pembelajaran) dirumuskan berdasarkan deskripsi CP dengan melihat hubungan antar elemen; bagaimana ATP (Alur Tujuan Pembelajaran) disusun; dan bagaimana Modul Ajar/RPP disusun.", ak:["alur tujuan pembelajaran","tujuan pembelajaran","modul ajar","rpp","rencana pelaksanaan pembelajaran","atp"]},
     ]},
     {sub:"C. Rencana Asesmen", items:[
-      {no:"", text:"Pada bagian ini dijelaskan teknik dan pelaksanaan asesmen formatif dan sumatif, analisis hasil asesmen, dan pemberian umpan balik.", ak:["rencana asesmen","asesmen formatif","umpan balik"]},
+      {no:"", text:"Pada bagian ini dijelaskan teknik dan pelaksanaan asesmen formatif dan sumatif, analisis hasil asesmen, dan pemberian umpan balik.", ak:["rencana asesmen","asesmen formatif","umpan balik","asesmen sumatif","rencana penilaian","feedback"]},
     ]},
   ]},
   {title:"V. PENDAMPINGAN, EVALUASI DAN PENGEMBANGAN PROFESIONAL", subsections:[
     {sub:"A. Pendampingan implementasi kurikulum", items:[
-      {no:"", text:"Menguraikan peran, strategi dan waktu pelaksanaan dalam pendampingan", ak:["pendampingan implementasi kurikulum","pendampingan guru"]},
+      {no:"", text:"Menguraikan peran, strategi dan waktu pelaksanaan dalam pendampingan", ak:["pendampingan implementasi kurikulum","pendampingan guru","coaching guru","pembinaan guru","supervisi akademik"]},
     ]},
     {sub:"B. Evaluasi implementasi kurikulum", items:[
-      {no:"", text:"Menjelaskan waktu evaluasi KSP", ak:["evaluasi ksp","waktu evaluasi"]},
-      {no:"", text:"Menjelaskan strategi cara melakukan evaluasi KSP.", ak:["strategi evaluasi","cara evaluasi"]},
-      {no:"", text:"Menjelaskan siapa saja yang terlibat dalam evaluasi KSP", ak:["pihak yang terlibat","tim evaluasi"]},
+      {no:"", text:"Menjelaskan waktu evaluasi KSP", ak:["evaluasi ksp","waktu evaluasi","jadwal evaluasi","periode evaluasi","waktu monitoring"]},
+      {no:"", text:"Menjelaskan strategi cara melakukan evaluasi KSP.", ak:["strategi evaluasi","cara evaluasi","teknik evaluasi","metode evaluasi","cara memonitor"]},
+      {no:"", text:"Menjelaskan siapa saja yang terlibat dalam evaluasi KSP", ak:["pihak yang terlibat","tim evaluasi","tim monev","pihak terkait","stakeholder evaluasi"]},
     ]},
     {sub:"C. Program pengembangan Profesional", items:[
-      {no:"", text:"Program peningkatan profesional guru direncanakan oleh pimpinan satuan pendidikan berdasarkan rencana pengembangan satuan pendidikan dan masukan pemangku kepentingan.", ak:["pengembangan profesional","peningkatan profesional guru"]},
+      {no:"", text:"Program peningkatan profesional guru direncanakan oleh pimpinan satuan pendidikan berdasarkan rencana pengembangan satuan pendidikan dan masukan pemangku kepentingan.", ak:["pengembangan profesional","peningkatan profesional guru","program pkb","rencana pengembangan guru","peningkatan kompetensi profesional"]},
     ]},
   ]},
   {title:"DAFTAR PUSTAKA", items:[
-    {no:"", text:"Berisi regulasi dan seluruh panduan kurikulum merdeka yang ditulis sesuai kaidah penulisan.", ak:["daftar pustaka"]},
+    {no:"", text:"Berisi regulasi dan seluruh panduan kurikulum merdeka yang ditulis sesuai kaidah penulisan.", ak:["daftar pustaka","referensi","bibliografi","rujukan"]},
   ]},
   {title:"LAMPIRAN", items:[
-    {no:"", text:"Lampiran ini dapat berupa file atau link dalam google drive/website, atau contoh untuk mapel tertentu.", ak:["lampiran"]},
-    {no:"1.", text:"Kalender Akademik", ak:["kalender akademik","kalender pendidikan"]},
-    {no:"2.", text:"Capaian Pembelajaran", ak:["capaian pembelajaran"]},
+    {no:"", text:"Lampiran ini dapat berupa file atau link dalam google drive/website, atau contoh untuk mapel tertentu.", ak:["lampiran","terlampir"]},
+    {no:"1.", text:"Kalender Akademik", ak:["kalender akademik","kalender pendidikan","kaldik"]},
+    {no:"2.", text:"Capaian Pembelajaran", ak:["capaian pembelajaran","cp"]},
     {no:"3.", text:"Alur Tujuan Pembelajaran", ak:["alur tujuan pembelajaran","atp "]},
     {no:"4.", text:"Modul Ajar/RPP", ak:["modul ajar","rencana pelaksanaan pembelajaran","rpp"]},
-    {no:"5.", text:"Modul Pelaksanaan Kokurikuler", ak:["modul kokurikuler","pelaksanaan kokurikuler"]},
-    {no:"6.", text:"Jadwal Pelajaran", ak:["jadwal pelajaran"]},
-    {no:"7.", text:"Dokumen foto dan daftar hadir workshop penyusunan KSP", ak:["daftar hadir workshop","dokumentasi workshop"]},
+    {no:"5.", text:"Modul Pelaksanaan Kokurikuler", ak:["modul kokurikuler","pelaksanaan kokurikuler","modul p5","panduan kokurikuler"]},
+    {no:"6.", text:"Jadwal Pelajaran", ak:["jadwal pelajaran","jadwal mengajar"]},
+    {no:"7.", text:"Dokumen foto dan daftar hadir workshop penyusunan KSP", ak:["daftar hadir workshop","dokumentasi workshop","notula workshop","absensi workshop","dokumentasi penyusunan ksp"]},
   ]},
 ];
 
@@ -802,6 +802,80 @@ function attachBackupHandlers(){
 
 let importedText = '';
 
+// Kata-kata umum yang diabaikan saat mencocokkan makna/akar kata, supaya
+// tidak dianggap "penting" ketika membandingkan kata kunci dengan kalimat.
+const STOPWORDS_ID = new Set(['dan','di','ke','dari','yang','untuk','pada','dengan','atau','ini','itu','oleh','dalam','adalah','serta','juga','akan','sudah','para','setiap','antar']);
+
+const SUFFIXES_ID = ['nya','lah','kah','kan','an','i'];
+const PREFIXES_ID = ['mempe','menge','meng','meny','mem','men','me','pemper','pemb','peng','peny','pem','pen','pe','berpe','ber','bel','ter','di','ke','se'];
+// Aturan "peluluhan": awalan meng-/peng- dkk pada Bahasa Indonesia sering
+// melesapkan huruf pertama akar kata (mis. "kembang" -> "pengembangan",
+// bukan "pengkembangan"). Supaya akar kata aslinya tetap bisa ditemukan,
+// setelah awalan ini dilepas, kita juga coba kembalikan huruf yang
+// kemungkinan lesap tersebut.
+const NASAL_RECOVER = { 'meng':'k', 'peng':'k', 'meny':'s', 'peny':'s', 'men':'t', 'pen':'t', 'mem':'p', 'pem':'p' };
+
+// Stemmer ringan Bahasa Indonesia: dari satu kata, hasilkan SEKUMPULAN
+// kemungkinan akar kata (bukan cuma satu tebakan), dengan mencoba melepas
+// tiap kemungkinan akhiran, lalu melepas awalan secara berulang beberapa
+// lapis (supaya awalan bertumpuk seperti "ke-ter-libat-an" ikut terkelupas
+// sampai ke akarnya, "libat"). Ini bukan stemmer linguistik yang sempurna,
+// tapi cukup untuk menaikkan recall deteksi kata yang sepadan/berimbuhan.
+function stemCandidates(word){
+  const w = (word || '').toLowerCase();
+  const forms = new Set([w]);
+  SUFFIXES_ID.forEach(s => {
+    if(w.endsWith(s) && w.length - s.length >= 3) forms.add(w.slice(0, -s.length));
+  });
+  for(let round = 0; round < 3; round++){
+    Array.from(forms).forEach(f => {
+      PREFIXES_ID.forEach(p => {
+        if(f.startsWith(p) && f.length - p.length >= 3){
+          const rest = f.slice(p.length);
+          forms.add(rest);
+          const recoverChar = NASAL_RECOVER[p];
+          if(recoverChar) forms.add(recoverChar + rest);
+        }
+      });
+    });
+  }
+  // Hanya kandidat HASIL POTONGAN yang cukup panjang (>=4 huruf) dianggap
+  // bermakna (mengurangi risiko salah cocok dari potongan yang terlalu
+  // pendek) - tapi kata ASLINYA sendiri selalu tetap disertakan, supaya
+  // kata pendek yang memang persis sama (mis. "tua") tidak ikut terbuang.
+  return Array.from(forms).filter(f => f.length >= 4 || f === w);
+}
+
+// Mengumpulkan seluruh kandidat akar kata dari semua kata pada satu
+// kalimat, dijadikan Set supaya cepat dicek keanggotaannya.
+function stemSentenceWords(normalizedSentence){
+  const words = normalizedSentence.match(/[a-z0-9]+/g) || [];
+  const set = new Set();
+  words.forEach(w => stemCandidates(w).forEach(c => set.add(c)));
+  return set;
+}
+
+// Mengecek apakah sebuah frasa kata kunci "ada" pada suatu kalimat, baik
+// secara persis/regex (presisi tinggi, seperti sebelumnya) MAUPUN secara
+// sepadan/berimbuhan: setiap kata penting pada frasa kata kunci punya
+// setidaknya satu kandidat akar kata yang juga muncul di kalimat itu,
+// walau bentuk katanya berbeda (mis. "penilaian" cocok dengan "menilai").
+function phraseMatchesSentence(keywordRaw, normalizedSentence, sentenceStemSet){
+  const keyword = keywordRaw.toLowerCase();
+  let re = null;
+  try{ re = new RegExp(keyword, 'i'); }catch(e){ re = null; }
+  if(re ? re.test(normalizedSentence) : normalizedSentence.includes(keyword)){
+    return true;
+  }
+  const words = keyword.split(/\s+/).filter(w => w.length >= 3 && !STOPWORDS_ID.has(w) && !/[\\^$.|?*+()[\]{}]/.test(w));
+  if(!words.length) return false;
+  return words.every(w => {
+    const candidates = stemCandidates(w);
+    if(!candidates.length) return sentenceStemSet.has(w);
+    return candidates.some(c => sentenceStemSet.has(c));
+  });
+}
+
 function normalize(text){
   return (text || '').toLowerCase().replace(/\s+/g, ' ');
 }
@@ -824,6 +898,7 @@ function analyzeImportedText(rawText){
   }
   const sentences = splitSentences(rawText);
   const normalizedSentences = sentences.map(normalize);
+  const sentenceStemsList = normalizedSentences.map(stemSentenceWords);
 
   let matched = 0, notMatched = 0, reviewCount = 0;
   Object.keys(ITEM_MAP).forEach(id => {
@@ -834,11 +909,11 @@ function analyzeImportedText(rawText){
     }
     let matchedSentence = null;
     const isMatch = item.ak.some(k => {
-      let re = null;
-      try{ re = new RegExp(k, 'i'); }catch(e){ re = null; }
       for(let i = 0; i < normalizedSentences.length; i++){
-        const hit = re ? re.test(normalizedSentences[i]) : normalizedSentences[i].includes(k.toLowerCase());
-        if(hit){ matchedSentence = sentences[i]; return true; }
+        if(phraseMatchesSentence(k, normalizedSentences[i], sentenceStemsList[i])){
+          matchedSentence = sentences[i];
+          return true;
+        }
       }
       return false;
     });
