@@ -255,6 +255,8 @@
   .typo-row .fix{font-weight:700; color:var(--ada);}
   .typo-row .ctx{display:block; margin-top:4px; font-size:12.5px; color:var(--ink); font-style:italic;}
   .typo-row .loc{font-size:11px; color:var(--muted);}
+
+  .save-status.dirty{color:#B45309; font-weight:600;}
 </style>
 </head>
 <body>
@@ -266,7 +268,8 @@
     <div class="progress-bar"><div id="progressFill" style="width:0%"></div></div>
   </div>
   <div class="actions">
-    <span class="save-status" id="saveStatus">Tersimpan</span>
+    <span class="save-status" id="saveStatus">Belum disimpan</span>
+    <button class="btn primary" id="saveBtn" title="Simpan seluruh isian saat ini">Simpan</button>
     <button class="btn" id="exportJsonBtn" title="Simpan cadangan seluruh isian ke file JSON">Ekspor JSON</button>
     <label class="btn" for="importJsonInput" title="Pulihkan isian dari file cadangan JSON" style="cursor:pointer;">Impor JSON</label>
     <input type="file" id="importJsonInput" accept="application/json,.json" style="display:none;">
@@ -292,12 +295,12 @@
     <h2>Impor Dokumen KSP Sekolah</h2>
     <p class="hint">Unggah dokumen KSP yang sudah disusun sekolah (.docx). Aplikasi akan memindai isinya dan otomatis menandai indikator yang komponennya terdeteksi ada di dalam dokumen, lengkap dengan kalimat buktinya. Untuk indikator kualitatif (mis. visi, misi, tujuan, pembiasaan, proses penyusunan) aplikasi hanya memastikan komponennya ADA; mutu rumusannya tetap dinilai pengawas. Hanya logo/gambar yang sama sekali tidak bisa dibaca otomatis.</p>
     <div class="import-row">
-      <input type="file" id="fileInput" accept=".docx" style="font-size:13px;">
+      <input type="file" id="fileInput" accept=".docx,.pdf,.xlsx,.xls,.csv" style="font-size:13px;">
       <span class="import-filename" id="fileName">Belum ada file dipilih</span>
       <button type="button" class="paste-toggle" id="pasteToggleBtn">atau tempel teks dokumen</button>
     </div>
     <div class="paste-area" id="pasteArea">
-      <textarea id="pasteText" placeholder="Tempel seluruh isi teks dokumen KSP di sini (berguna jika file bukan .docx, misalnya PDF atau Google Docs)..."></textarea>
+      <textarea id="pasteText" placeholder="Tempel seluruh isi teks dokumen KSP di sini (berguna jika format file tidak didukung, atau hasil bacaan PDF kurang rapi)..."></textarea>
     </div>
     <button type="button" class="analyze-btn" id="analyzeBtn" disabled>Analisis & Isi Otomatis</button>
     <div class="import-status" id="importStatus"></div>
@@ -337,6 +340,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const DATA = [
   {title:"PROSES PENYUSUNAN", items:[
@@ -694,57 +699,38 @@ function updateReviewBadges(){
   });
 }
 
+// Tidak lagi menyimpan otomatis ke penyimpanan setiap kali ada perubahan.
+// Perubahan hanya ditandai di layar ("Ada perubahan belum disimpan");
+// penyimpanan sungguhan baru terjadi saat tombol "Simpan" ditekan.
 function scheduleSave(){
   const statusEl = document.getElementById('saveStatus');
+  statusEl.textContent = 'Ada perubahan belum disimpan';
+  statusEl.classList.add('dirty');
+}
+
+async function saveNow(){
+  const statusEl = document.getElementById('saveStatus');
   statusEl.textContent = 'Menyimpan…';
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    try{
-      await storageSet(STORAGE_KEY, JSON.stringify(state));
-      statusEl.textContent = 'Tersimpan';
-    }catch(e){
-      statusEl.textContent = 'Gagal menyimpan';
-      console.error(e);
-    }
-  }, 500);
+  try{
+    await storageSet(STORAGE_KEY, JSON.stringify(state));
+    statusEl.textContent = 'Tersimpan';
+    statusEl.classList.remove('dirty');
+    return true;
+  }catch(e){
+    statusEl.textContent = 'Gagal menyimpan';
+    console.error(e);
+    return false;
+  }
 }
 
 async function loadState(){
-  try{
-    const res = await storageGet(STORAGE_KEY);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      state = Object.assign({fields:{}, items:{}}, parsed);
-    } else {
-      // Belum ada data di bawah kunci baru (khusus file ini).
-      // Coba pindahkan data lama dari kunci bersama sebelumnya, jika ada,
-      // supaya isian yang sudah pernah dibuat tidak hilang.
-      let restoredLegacy = false;
-      try{
-        const legacy = await storageGet(LEGACY_STORAGE_KEY);
-        if(legacy && legacy.value){
-          const parsed = JSON.parse(legacy.value);
-          state = Object.assign({fields:{}, items:{}}, parsed);
-          await storageSet(STORAGE_KEY, JSON.stringify(state));
-          restoredLegacy = true;
-        }
-      }catch(e2){
-        // tidak ada data lama juga
-      }
-      // Belum ada data tersimpan sama sekali: gunakan hasil analisis
-      // otomatis dari dokumen KOSP yang sudah dipindai sebelumnya (jika ada).
-      if(!restoredLegacy && typeof PRESET_STATE !== 'undefined'){
-        state = JSON.parse(JSON.stringify(PRESET_STATE));
-        hasImported = true;
-        try{ await storageSet(STORAGE_KEY, JSON.stringify(state)); }catch(e3){}
-      }
-    }
-  }catch(e){
-    // no saved data yet
-  }
+  // Sengaja TIDAK memuat draft tersimpan secara otomatis saat dibuka.
+  // Aplikasi selalu tampil bersih; isian sebelumnya hanya kembali kalau
+  // pengguna sudah menekan tombol "Simpan" lalu memilih memuatnya lewat
+  // "Impor JSON" (lihat attachBackupHandlers).
+  state = { fields:{}, items:{} };
   applyStateToDOM();
   updateReviewBadges();
-  if(Array.isArray(state.typos)) renderTypoPanel(state.typos);
 }
 
 function attachHandlers(){
@@ -808,13 +794,16 @@ function attachHandlers(){
     renderTypoPanel([]);
     updateSummary();
     try{ await storageDelete(STORAGE_KEY); }catch(e){}
-    document.getElementById('saveStatus').textContent = 'Tersimpan';
+    document.getElementById('saveStatus').textContent = 'Belum disimpan';
+    document.getElementById('saveStatus').classList.remove('dirty');
     document.getElementById('importStatus').textContent = '';
     document.getElementById('importStatus').classList.remove('result');
     document.getElementById('fileName').textContent = 'Belum ada file dipilih';
     importedText = '';
     document.getElementById('analyzeBtn').disabled = true;
   });
+
+  document.getElementById('saveBtn').addEventListener('click', () => { saveNow(); });
 
   attachImportHandlers();
   attachBackupHandlers();
@@ -868,8 +857,8 @@ function attachBackupHandlers(){
       hasImported = true;
       applyStateToDOM();
       updateReviewBadges();
-      await storageSet(STORAGE_KEY, JSON.stringify(state));
-      document.getElementById('saveStatus').textContent = 'Tersimpan';
+      if(Array.isArray(state.typos)) renderTypoPanel(state.typos);
+      await saveNow();
       alert('Data berhasil dipulihkan dari file cadangan JSON.');
     }catch(err){
       console.error(err);
@@ -1217,6 +1206,54 @@ function analyzeImportedText(rawText){
   return { matched, notMatched, reviewCount, typoCount: state.typos.length };
 }
 
+// Membaca teks dari file yang diunggah, sesuai jenisnya. Setiap jenis file
+// pakai pustaka yang berbeda:
+//  - .docx  -> mammoth (mengambil teks polos dari paragraf Word)
+//  - .pdf   -> pdf.js (mengambil teks per halaman; TIDAK bisa membaca PDF
+//              hasil pindai/foto, karena itu berupa gambar, bukan teks)
+//  - .xlsx/.xls/.csv -> SheetJS (setiap sheet diubah jadi baris teks, supaya
+//              kata kunci di dalam sel tetap bisa terdeteksi oleh pencocok)
+async function extractTextFromFile(file){
+  const name = (file.name || '').toLowerCase();
+  const arrayBuffer = await file.arrayBuffer();
+
+  if(name.endsWith('.pdf')){
+    if(typeof pdfjsLib === 'undefined'){
+      throw new Error('Pustaka pembaca .pdf tidak dapat dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let out = '';
+    for(let p = 1; p <= pdf.numPages; p++){
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      out += content.items.map(it => it.str).join(' ') + '\n\n';
+    }
+    return out;
+  }
+
+  if(name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')){
+    if(typeof XLSX === 'undefined'){
+      throw new Error('Pustaka pembaca spreadsheet tidak dapat dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+    }
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+    let out = '';
+    wb.SheetNames.forEach(sheetName => {
+      const sheet = wb.Sheets[sheetName];
+      const csv = XLSX.utils.sheet_to_csv(sheet, { blankrows: false });
+      out += `Sheet: ${sheetName}\n${csv}\n\n`;
+    });
+    return out;
+  }
+
+  // Bawaan/lainnya: perlakukan sebagai .docx (perilaku sebelumnya)
+  if(typeof mammoth === 'undefined'){
+    throw new Error('Pustaka pembaca .docx tidak dapat dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+  }
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value || '';
+}
+
 function attachImportHandlers(){
   const fileInput = document.getElementById('fileInput');
   const fileNameEl = document.getElementById('fileName');
@@ -1243,21 +1280,16 @@ function attachImportHandlers(){
     importStatus.classList.remove('result');
     analyzeBtn.disabled = true;
     try{
-      if(typeof mammoth === 'undefined'){
-        throw new Error('Pustaka pembaca .docx tidak dapat dimuat.');
-      }
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer });
-      importedText = result.value || '';
+      importedText = await extractTextFromFile(file);
       if(!importedText.trim()){
-        importStatus.textContent = 'Dokumen tidak berisi teks yang bisa dibaca. Coba gunakan opsi "tempel teks".';
+        importStatus.textContent = 'Dokumen tidak berisi teks yang bisa dibaca (mungkin hasil pindai/gambar). Coba gunakan opsi "tempel teks".';
       } else {
         importStatus.textContent = `Berhasil membaca dokumen (${importedText.length.toLocaleString('id-ID')} karakter). Klik "Analisis & Isi Otomatis".`;
         analyzeBtn.disabled = false;
       }
     }catch(err){
       console.error(err);
-      importStatus.textContent = 'Gagal membaca file .docx. Silakan gunakan opsi "tempel teks" di bawah sebagai alternatif.';
+      importStatus.textContent = `Gagal membaca file: ${err.message || err}. Silakan gunakan opsi "tempel teks" di bawah sebagai alternatif.`;
       pasteArea.classList.add('show');
     }
   });
